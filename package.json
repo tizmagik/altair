@@ -114,8 +114,6 @@
     "@angular/compiler": "^8.1.2",
     "@angular/compiler-cli": "^8.1.2",
     "@types/chrome": "^0.0.90",
-    "@types/electron": "^1.6.10",
-    "@types/graphql": "^14.2.2",
     "@types/jasmine": "3.5.0",
     "@types/mousetrap": "^1.6.3",
     "@types/node": "^12.6.8",
