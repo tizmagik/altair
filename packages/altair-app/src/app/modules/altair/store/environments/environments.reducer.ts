@@ -1,33 +1,7 @@
-import { Action } from '@ngrx/store';
 import uuid from 'uuid/v4';
-import { getAltairConfig } from '../../config';
+import { getAltairConfig } from 'altair-graphql-core/build/config';
+import { EnvironmentsState, EnvironmentState } from 'altair-graphql-core/build/types/state/environments.interfaces';
 import * as environmentsAction from './environments.action';
-import { IDictionary } from '../../interfaces/shared';
-
-interface InitialEnvironmentState {
-  id?: string
-  title?: string,
-  variables?: IDictionary,
-};
-
-export interface IInitialEnvironments {
-  base?: InitialEnvironmentState,
-  subEnvironments?: InitialEnvironmentState[]
-}
-
-export interface EnvironmentState {
-  // Adding undefined for backward compatibility
-  id?: string;
-  title: string;
-  variablesJson: string;
-}
-
-export interface State {
-  base: EnvironmentState;
-  subEnvironments: EnvironmentState[];
-  // Adding undefined for backward compatibility
-  activeSubEnvironment?: string;
-}
 
 export const getInitialEnvironmentState = (): EnvironmentState => {
   const { initialData: { environments } } = getAltairConfig();
@@ -50,14 +24,14 @@ const getInitialSubEnvironmentState = (): EnvironmentState[] => {
   });
 }
 
-export const getInitialState = (): State => {
+export const getInitialState = (): EnvironmentsState => {
   return {
     base: getInitialEnvironmentState(),
     subEnvironments: getInitialSubEnvironmentState(),
   }
 };
 
-export function environmentsReducer(state = getInitialState(), action: environmentsAction.Action): State {
+export function environmentsReducer(state = getInitialState(), action: environmentsAction.Action): EnvironmentsState {
   switch (action.type) {
     case environmentsAction.ADD_SUB_ENVIRONMENT:
       return {

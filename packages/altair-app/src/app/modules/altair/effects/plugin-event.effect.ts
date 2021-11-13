@@ -10,6 +10,7 @@ import * as queryActions from '../store/query/query.action';
 import * as schemaActions from '../store/gql-schema/gql-schema.action';
 import * as windowsMetaActions from '../store/windows-meta/windows-meta.action';
 import { PluginEventService } from '../services';
+import { RootState } from 'altair-graphql-core/build/types/state/state.interfaces';
 
 @Injectable()
 export class PluginEventEffects {
@@ -84,9 +85,26 @@ export class PluginEventEffects {
       )
   }, { dispatch: false });
 
+  onSetResponseStats$: Observable<Action> = createEffect(() => {
+    return this.actions$
+      .pipe(
+        ofType(queryActions.SET_RESPONSE_STATS),
+        withLatestFrom(this.store, (action: queryActions.SetResponseStatsAction, state) => {
+          return { state, data: state.windows[action.windowId], windowId: action.windowId, action };
+        }),
+        switchMap(data => {
+          this.pluginEventService.emit('query-result-meta.change', {
+            windowId: data.windowId,
+            data: data.action.payload,
+          });
+          return EMPTY;
+        }),
+      )
+  }, { dispatch: false });
+
   constructor(
     private actions$: Actions,
-    private store: Store<fromRoot.State>,
+    private store: Store<RootState>,
     private pluginEventService: PluginEventService,
   ) {}
 }

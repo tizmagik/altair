@@ -7,6 +7,7 @@ import { HttpClientModule, HttpClient, HTTP_INTERCEPTORS } from '@angular/common
 import { Store, StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { ToastrModule } from 'ngx-toastr';
 
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -15,12 +16,14 @@ import { SortablejsModule } from 'ngx-sortablejs';
 import { CookieService } from 'ngx-cookie-service';
 import { SharedModule } from './modules/shared/shared.module';
 
-import { getReducer, metaReducers, reducerToken, State } from './store';
+import { getReducer, metaReducers, reducerToken } from './store';
 
 import { QueryEffects } from './effects/query.effect';
 import { WindowsEffects } from './effects/windows.effect';
+import { WindowsMetaEffects } from './effects/windows-meta.effect';
 import { QueryCollectionEffects } from './effects/query-collection.effect';
 import { PluginEventEffects } from './effects/plugin-event.effect';
+import { LocalEffects } from './effects/local.effect';
 
 import { DirectivesModule } from './directives';
 import { ComponentModule } from './components/components.module';
@@ -42,6 +45,7 @@ import { AppOverlayContainer } from './overlay-container';
 import { environment } from 'environments/environment';
 import { AppInitAction } from './store/action';
 import { ReducerBootstrapper } from './store/reducer-bootstrapper';
+import { RootState } from 'altair-graphql-core/build/types/state/state.interfaces';
 
 registerLocaleData(en);
 
@@ -82,7 +86,6 @@ const providers = [
   services.ThemeRegistryService,
   services.SubscriptionProviderRegistryService,
   services.PluginContextService,
-  services.BackupService,
   // Setting the reducer provider in main.ts now (for proper config initialization)
   // reducerProvider,
   CookieService,
@@ -134,7 +137,14 @@ const providers = [
       },
       // initialState: {},
     }),
-    EffectsModule.forRoot([ QueryEffects, WindowsEffects, QueryCollectionEffects, PluginEventEffects ]),
+    EffectsModule.forRoot([
+      QueryEffects,
+      WindowsEffects,
+      WindowsMetaEffects,
+      QueryCollectionEffects,
+      PluginEventEffects,
+      LocalEffects,
+    ]),
     StoreDevtoolsModule.instrument({
       logOnly: environment.production,
     }),
@@ -144,6 +154,15 @@ const providers = [
         useFactory: createTranslateLoader,
         deps: [ HttpClient ]
       }
+    }),
+    ToastrModule.forRoot({
+      newestOnTop: false,
+      closeButton: true,
+      positionClass: 'toast-top-center',
+      enableHtml: true,
+      countDuplicates: true,
+      preventDuplicates: true,
+      resetTimeoutOnDuplicate: true,
     }),
   ],
   providers: providers,
@@ -158,7 +177,7 @@ const providers = [
 export class AltairModule {
   constructor(
     applicationInitStatus: ApplicationInitStatus,
-    store: Store<State>,
+    store: Store<RootState>,
     reducerBootstrapper: ReducerBootstrapper,
   ) {
     applicationInitStatus.donePromise.then(() => store.dispatch(new AppInitAction({ initialState: reducerBootstrapper.initialState })));

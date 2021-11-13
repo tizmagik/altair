@@ -1,7 +1,7 @@
 
-import { EMPTY, Observable, of, zip, forkJoin, from } from 'rxjs';
+import { EMPTY, Observable, of, zip, forkJoin, from, pipe } from 'rxjs';
 
-import { map, withLatestFrom, switchMap, tap, catchError } from 'rxjs/operators';
+import { map, withLatestFrom, switchMap, tap, catchError, filter } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { Store, Action } from '@ngrx/store';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
@@ -10,7 +10,8 @@ import * as fromRoot from '../store';
 
 import * as collectionActions from '../store/collection/collection.action';
 import { QueryCollectionService, WindowService, NotifyService } from '../services';
-import { downloadJson, openFile } from '../utils';
+import { downloadJson, openFile, openFiles } from '../utils';
+import { RootState } from 'altair-graphql-core/build/types/state/state.interfaces';
 
 
 @Injectable()
@@ -154,27 +155,36 @@ export class QueryCollectionEffects {
   }, { dispatch: false });
 
 
-  importCollection$: Observable<Action> = createEffect(() => {
-    return this.actions$
-      .pipe(
-        ofType(collectionActions.IMPORT_COLLECTION),
-        switchMap(() => {
-          return from(openFile({ accept: '.agc' }));
-        }),
-        switchMap((data: string) => this.collectionService.importCollectionDataFromJson(data)),
-        tap(() => this.notifyService.success('Successfully imported collection.')),
-        map(() => new collectionActions.LoadCollectionsAction()),
-        catchError((error) => {
-          const errorMessage = error.message ? error.message : error.toString();
-          this.notifyService.error(`Something went wrong importing collection. Error: ${errorMessage}`);
-          return EMPTY;
-        }),
-      )
+
+  importCollections$: Observable<Action> = createEffect(() => {
+    return this.actions$.pipe(
+      ofType(collectionActions.IMPORT_COLLECTIONS),
+      switchMap(() => {
+        return from(openFiles({ accept: ".agc" }));
+      }),
+      tap((data) => {
+        data.forEach((elem) =>
+          this.collectionService.importCollectionDataFromJson(elem)
+        )
+      }),
+      tap(() =>
+        this.notifyService.success("Successfully imported collection.")
+      ),
+      map(() => new collectionActions.LoadCollectionsAction()),
+      catchError((error) => {
+        const errorMessage = error.message ? error.message : error.toString();
+        this.notifyService.error(
+          `Something went wrong importing collection. Error: ${errorMessage}`
+        );
+        return EMPTY;
+      })
+    );
   });
+
 
   constructor(
     private actions$: Actions,
-    private store: Store<fromRoot.State>,
+    private store: Store<RootState>,
     private collectionService: QueryCollectionService,
     private windowService: WindowService,
     private notifyService: NotifyService,

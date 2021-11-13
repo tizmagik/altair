@@ -1,20 +1,17 @@
 
-import {of as observableOf, Subscription, Observable, Observer } from 'rxjs';
+import { Observable } from 'rxjs';
 
-import { first, tap, map, switchMap } from 'rxjs/operators';
+import { first, tap, map } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 
 import uuid from 'uuid/v4';
 
-import * as fromRoot from '../store';
-import * as fromWindows from '../store/windows/windows.reducer';
 import * as fromQuery from '../store/query/query.reducer';
 
 import * as queryActions from '../store/query/query.action';
 import * as headerActions from '../store/headers/headers.action';
 import * as variableActions from '../store/variables/variables.action';
-import * as layoutActions from '../store/layout/layout.action';
 import * as windowActions from '../store/windows/windows.action';
 import * as windowsMetaActions from '../store/windows-meta/windows-meta.action';
 import * as preRequestActions from '../store/pre-request/pre-request.action';
@@ -26,6 +23,8 @@ import { getFileStr } from '../utils';
 import { parseCurlToObj } from '../utils/curl';
 import { debug } from '../utils/logger';
 import { GqlService } from './gql/gql.service';
+import { RootState } from 'altair-graphql-core/build/types/state/state.interfaces';
+import { ExportWindowState } from 'altair-graphql-core/build/types/state/window.interfaces';
 
 
 interface ImportWindowDataOptions {
@@ -36,7 +35,7 @@ interface ImportWindowDataOptions {
 export class WindowService {
 
   constructor(
-    private store: Store<fromRoot.State>,
+    private store: Store<RootState>,
     private gqlService: GqlService,
   ) { }
 
@@ -87,7 +86,7 @@ export class WindowService {
       const window = { ...data.windows[windowId] };
 
       if (window) {
-        const windowData: fromWindows.ExportWindowState = {
+        const windowData: ExportWindowState = {
           version: 1,
           type: 'window',
           query: window.query.query || '',
@@ -109,7 +108,7 @@ export class WindowService {
     });
   }
 
-  getWindowExportData(windowId: string): Observable<fromWindows.ExportWindowState> {
+  getWindowExportData(windowId: string): Observable<ExportWindowState> {
     return this.store.pipe(
       first(),
       map(state => {
@@ -129,6 +128,8 @@ export class WindowService {
           windowName: window.layout.title,
           preRequestScript: window.preRequest.script,
           preRequestScriptEnabled: window.preRequest.enabled,
+          postRequestScript: window.postRequest.script,
+          postRequestScriptEnabled: window.postRequest.enabled,
         };
       }),
     );
@@ -159,7 +160,7 @@ export class WindowService {
 
     try {
       const curlObj = parseCurlToObj(curlStr);
-      const windowData: fromWindows.ExportWindowState = {
+      const windowData: ExportWindowState = {
         version: 1,
         type: 'window',
         query: curlObj.body ? JSON.parse(curlObj.body).query : '',
@@ -183,7 +184,7 @@ export class WindowService {
    * Import the window represented by the provided data string
    * @param data window data string
    */
-  importWindowData(data: fromWindows.ExportWindowState, options: ImportWindowDataOptions = {}) {
+  importWindowData(data: ExportWindowState, options: ImportWindowDataOptions = {}) {
     try {
       // Verify file's content
       if (!data) {
@@ -261,7 +262,7 @@ export class WindowService {
    */
   importStringData(dataStr: string) {
     const invalidFileError = new Error('Invalid Altair window file.');
-    const emptyWindowData: fromWindows.ExportWindowState = {
+    const emptyWindowData: ExportWindowState = {
       version: 1,
       type: 'window',
       apiUrl: '',
@@ -276,7 +277,7 @@ export class WindowService {
     };
 
     try {
-      let parsed: fromWindows.ExportWindowState;
+      let parsed: ExportWindowState;
       try {
         parsed = JSON.parse(dataStr);
       } catch (err) {

@@ -40,7 +40,9 @@ import {
   refactorArgumentsToVariables,
   generateRandomNameForString,
 } from './helpers';
-import { SelectedOperation } from '../../store/query/query.reducer';
+import { HeaderState } from 'altair-graphql-core/build/types/state/header.interfaces';
+import { FileVariable } from 'altair-graphql-core/build/types/state/variable.interfaces';
+import { SelectedOperation } from 'altair-graphql-core/build/types/state/query.interfaces';
 
 
 interface SendRequestOptions {
@@ -48,19 +50,22 @@ interface SendRequestOptions {
   method: string;
   withCredentials?: boolean;
   variables?: string;
-  headers?: fromHeaders.Header[];
-  files?: fromVariables.FileVariable[];
+  headers?: HeaderState;
+  files?: FileVariable[];
   selectedOperation?: SelectedOperation;
 };
 
 export interface SendRequestResponse {
   response: HttpResponse<any>;
   meta: {
+      requestStartTime: number;
+      requestEndTime: number;
       responseTime: number;
       headers: IDictionary;
   };
 }
 
+interface ResolvedFileVariable { name: string; data: File; }
 type IntrospectionRequestOptions = Omit<SendRequestOptions, 'query'>;
 
 @Injectable()
@@ -109,6 +114,8 @@ export class GqlService {
         return {
           response,
           meta: {
+            requestStartTime,
+            requestEndTime,
             responseTime: requestElapsedTime,
             headers: response.headers.keys().reduce((acc, key) => ({ ...acc, [key]: response.headers.get(key)}), {}),
           }
@@ -121,7 +128,7 @@ export class GqlService {
     return method.toLowerCase() === 'get';
   }
 
-  setHeaders(headers: fromHeaders.Header[] = [], opts = { skipDefaults: false }) {
+  setHeaders(headers: HeaderState = [], opts = { skipDefaults: false }) {
     let newHeaders = new HttpHeaders();
     if (!opts.skipDefaults) {
       newHeaders = new HttpHeaders(this.defaultHeaders);
@@ -226,7 +233,7 @@ export class GqlService {
     }
   }
 
-  hasInvalidFileVariable(fileVariables: fromVariables.FileVariable[]) {
+  hasInvalidFileVariable(fileVariables: FileVariable[]) {
     const { erroneousFiles } =  this.normalizeFiles(fileVariables);
     return Boolean(erroneousFiles.length);
   }
@@ -460,15 +467,14 @@ export class GqlService {
     }
   }
 
-  normalizeFiles(files?: fromVariables.FileVariable[]) {
+  normalizeFiles(files?: FileVariable[]) {
     if (!files || !files.length) {
       return { resolvedFiles: [], erroneousFiles: files || [] };
     }
 
-    interface ResolvedFileVariable { name: string; data: File; }
 
     let resolvedFiles: ResolvedFileVariable[] = [];
-    let erroneousFiles: fromVariables.FileVariable[] = [];
+    let erroneousFiles: FileVariable[] = [];
 
     files.forEach(file => {
       if (!file.name) {

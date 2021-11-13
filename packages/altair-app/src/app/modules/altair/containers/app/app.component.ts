@@ -1,5 +1,5 @@
 import { first, distinctUntilChanged, map, filter, take, switchMap, timeout, catchError } from 'rxjs/operators';
-import { Component, ViewChild, OnDestroy } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { Observable, Subject, forkJoin, of, from } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
@@ -7,17 +7,12 @@ import { TranslateService } from '@ngx-translate/core';
 import uuid from 'uuid/v4';
 
 import * as fromRoot from '../../store';
-import * as fromHeader from '../../store/headers/headers.reducer';
-import * as fromVariable from '../../store/variables/variables.reducer';
-import * as fromSettings from '../../store/settings/settings.reducer';
 import * as fromCollection from '../../store/collection/collection.reducer';
 import * as fromWindowsMeta from '../../store/windows-meta/windows-meta.reducer';
 import * as fromEnvironments from '../../store/environments/environments.reducer';
 import * as fromWindows from '../../store/windows/windows.reducer';
 
 import * as queryActions from '../../store/query/query.action';
-import * as headerActions from '../../store/headers/headers.action';
-import * as variableActions from '../../store/variables/variables.action';
 import * as dialogsActions from '../../store/dialogs/dialogs.action';
 import * as layoutActions from '../../store/layout/layout.action';
 import * as docsActions from '../../store/docs/docs.action';
@@ -42,31 +37,39 @@ import {
   ThemeRegistryService,
 } from '../../services';
 
-import { AltairConfig } from '../../config';
-import isElectron from '../../utils/is_electron';
+import isElectron from 'altair-graphql-core/build/utils/is_electron';
 import { debug } from '../../utils/logger';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { AltairPlugin, AltairPanel } from '../../services/plugin/plugin';
 import { PluginEventService } from '../../services/plugin/plugin-event.service';
-import { ICustomTheme } from '../../services/theme/theme';
+import { SettingsState } from 'altair-graphql-core/build/types/state/settings.interfaces';
+import { CollectionState, IQuery, IQueryCollection, SortByOptions } from 'altair-graphql-core/build/types/state/collection.interfaces';
+import { WindowsMetaState } from 'altair-graphql-core/build/types/state/windows-meta.interfaces';
+import { EnvironmentsState, EnvironmentState } from 'altair-graphql-core/build/types/state/environments.interfaces';
+import { ICustomTheme } from 'altair-graphql-core/build/theme';
+import { RootState } from 'altair-graphql-core/build/types/state/state.interfaces';
+import { AltairConfig } from 'altair-graphql-core/build/config';
+import { WindowState } from 'altair-graphql-core/build/types/state/window.interfaces';
+import { AltairPanel } from 'altair-graphql-core/build/plugin/panel';
+import { externalLink, openFile } from '../../utils';
 
 @UntilDestroy({ checkProperties: true })
 @Component({
   selector: 'app-altair',
   templateUrl: './app.component.html',
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent  {
   windowIds$: Observable<any[]>;
-  settings$: Observable<fromSettings.State>;
-  collection$: Observable<fromCollection.State>;
+  settings$: Observable<SettingsState>;
+  collection$: Observable<CollectionState>;
   sortedCollections$: Observable<any[]>;
-  windowsMeta$: Observable<fromWindowsMeta.State>;
-  environments$: Observable<fromEnvironments.State>;
-  activeEnvironment$: Observable<fromEnvironments.EnvironmentState | undefined>;
+  windowsMeta$: Observable<WindowsMetaState>;
+  environments$: Observable<EnvironmentsState>;
+  activeEnvironment$: Observable<EnvironmentState | undefined>;
   theme$: Observable<ICustomTheme | undefined>;
+  themeDark$: Observable<ICustomTheme | undefined>;
 
   windowIds: string[] = [];
-  windows: fromWindows.State = {};
+  windows: WindowState = {};
   closedWindows: any[] = [];
   activeWindowId = '';
   isElectron = isElectron;
@@ -85,7 +88,7 @@ export class AppComponent implements OnDestroy {
 
   constructor(
     private windowService: WindowService,
-    private store: Store<fromRoot.State>,
+    private store: Store<RootState>,
     private translate: TranslateService,
     private donationService: DonationService,
     private electronApp: ElectronAppService,
@@ -126,6 +129,38 @@ export class AppComponent implements OnDestroy {
           }
         };
         const settingsThemeConfig = settings.themeConfig || {};
+
+        return this.themeRegistry.mergeThemes(selectedTheme, deperecatedThemeConfig, settingsThemeConfig);
+      })
+    );
+    this.themeDark$ = this.settings$.pipe(
+      map((settings) => {
+        // Get specified theme
+        // Add deprecated theme options
+        // Warn about deprecated theme options, with alternatives
+        // Add theme config object from settings
+
+        const selectedTheme = settings['theme.dark'] && this.themeRegistry.getTheme(settings['theme.dark']) || { isSystem: true };
+        const deperecatedThemeConfig: ICustomTheme = {
+          type: {
+            fontSize: {
+              ...(settings['theme.fontsize'] && {
+                remBase: settings['theme.fontsize'],
+              }),
+            }
+          },
+          editor: {
+            ...(settings['theme.editorFontSize'] && {
+              fontSize: settings['theme.editorFontSize'],
+            }),
+            ...(settings['theme.editorFontFamily'] && {
+              fontFamily: {
+                default: settings['theme.editorFontFamily'],
+              },
+            }),
+          }
+        };
+        const settingsThemeConfig = settings['themeConfig.dark'] || {};
 
         return this.themeRegistry.mergeThemes(selectedTheme, deperecatedThemeConfig, settingsThemeConfig);
       })
@@ -313,6 +348,14 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new windowActions.ReopenClosedWindowAction());
   }
 
+  exportBackupData() {
+    this.store.dispatch(new windowsMetaActions.ExportBackupDataAction());
+  }
+
+  importBackupData() {
+    this.store.dispatch(new windowsMetaActions.ImportBackupDataAction());
+  }
+
   importWindow() {
     this.store.dispatch(new windowsActions.ImportWindowAction());
   }
@@ -425,7 +468,7 @@ export class AppComponent implements OnDestroy {
     query,
     collectionId,
     windowIdInCollection
-  }: { query: fromCollection.IQuery, collectionId: number, windowIdInCollection: string }) {
+  }: { query: IQuery, collectionId: number, windowIdInCollection: string }) {
     const matchingOpenQueryWindowIds = Object.keys(this.windows).filter(windowId => {
       return this.windows[windowId].layout.windowIdInCollection === windowIdInCollection;
     });
@@ -436,7 +479,7 @@ export class AppComponent implements OnDestroy {
     this.windowService.importWindowData({ ...query, collectionId, windowIdInCollection }, { fixedTitle: true });
   }
 
-  deleteQueryFromCollection({ collectionId, query }: { collectionId: number, query: fromCollection.IQuery }) {
+  deleteQueryFromCollection({ collectionId, query }: { collectionId: number, query: IQuery }) {
    this.store.dispatch(new collectionActions.DeleteQueryFromCollectionAction({ collectionId, query }));
   }
 
@@ -448,11 +491,11 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new collectionActions.ExportCollectionAction({ collectionId }));
   }
 
-  importCollection() {
-    this.store.dispatch(new collectionActions.ImportCollectionAction());
+  importCollections() {
+    this.store.dispatch(new collectionActions.ImportCollectionsAction());
   }
 
-  toggleEditCollectionDialog({ collection }: { collection: fromCollection.IQueryCollection }) {
+  toggleEditCollectionDialog({ collection }: { collection: IQueryCollection }) {
     this.store.dispatch(new collectionActions.SetActiveCollectionAction({ collection }));
     this.store.dispatch(new windowsMetaActions.ShowEditCollectionDialogAction({ value: true }));
   }
@@ -461,11 +504,11 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new windowsMetaActions.ShowEditCollectionDialogAction({ value }));
   }
 
-  updateCollection({ collection }: { collection: fromCollection.IQueryCollection & { id: number } }) {
+  updateCollection({ collection }: { collection: IQueryCollection & { id: number } }) {
     this.store.dispatch(new collectionActions.UpdateCollectionAction({ collectionId: collection.id, collection }));
   }
 
-  sortCollections({ sortBy = '' as fromCollection.SortByOptions }) {
+  sortCollections({ sortBy = '' as SortByOptions }) {
     this.store.dispatch(new collectionActions.SortCollectionsAction({ sortBy }));
   }
 
@@ -496,32 +539,15 @@ export class AppComponent implements OnDestroy {
 
   openDonationPage(e: Event) {
     this.donationService.donated();
-    this.externalLink(e, this.altairConfig.donation.url);
+    externalLink(e, this.altairConfig.donation.url);
     this.hideDonationAlert();
   }
 
   openWebAppLimitationPost(e: Event) {
-    this.externalLink(e, 'https://sirmuel.design/altair-graphql-web-app-limitations-b671a0a460b8');
-  }
-
-  externalLink(e: Event, url: string) {
-    e.preventDefault();
-
-    // If electron app
-    if ((window as any).process && (window as any).process.versions.electron) {
-      const electron = (window as any).require('electron');
-      electron.shell.openExternal(url);
-    } else {
-      const win = window.open(url, '_blank');
-      if (win) {
-        win.focus();
-      }
-    }
+    externalLink(e, 'https://sirmuel.design/altair-graphql-web-app-limitations-b671a0a460b8');
   }
 
   trackById(index: number, item: any) {
     return item.id;
   }
-
-  ngOnDestroy() {}
 }

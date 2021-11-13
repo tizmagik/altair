@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { HTTP_VERBS } from 'altair-graphql-core/build/types/state/query.interfaces';
 import { OperationDefinitionNode } from 'graphql';
 
 @Component({
@@ -26,7 +27,7 @@ export class UrlBoxComponent {
   @Output() exportWindowChange = new EventEmitter();
   @Output() updateQueryInCollectionChange = new EventEmitter();
 
-  methods = ['POST', 'GET', 'PUT', 'DELETE'];
+  methods = HTTP_VERBS;
 
   setApiUrl() {
     this.urlChange.emit(this.apiUrl.trim());

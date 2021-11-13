@@ -10,7 +10,7 @@ import * as dialogsActions from '../../store/dialogs/dialogs.action';
 import * as queryActions from '../../store/query/query.action';
 import * as docsActions from '../../store/docs/docs.action';
 import { ElectronAppService } from '../electron-app/electron-app.service';
-
+import { RootState } from 'altair-graphql-core/build/types/state/state.interfaces';
 
 export interface KeyboardShortcutCategory {
   title: string;
@@ -31,7 +31,7 @@ export class KeybinderService {
   private shortcuts: KeyboardShortcut[] = [];
 
   constructor(
-    private store: Store<fromRoot.State>,
+    private store: Store<RootState>,
     private windowService: WindowService,
     private electronService: ElectronAppService,
     private zone: NgZone,

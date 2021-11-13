@@ -6,9 +6,6 @@ import { Injectable } from '@angular/core';
 import { Store, Action } from '@ngrx/store';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
 
-import * as fromRoot from '../store';
-import * as fromWindows from '../store/windows/windows.reducer';
-
 import * as windowActions from '../store/windows/windows.action';
 import * as windowsMetaActions from '../store/windows-meta/windows-meta.action';
 import * as localActions from '../store/local/local.action';
@@ -16,6 +13,7 @@ import * as localActions from '../store/local/local.action';
 import { WindowService } from '../services/window.service';
 
 import { downloadJson, openFile } from '../utils';
+import { RootState } from 'altair-graphql-core/build/types/state/state.interfaces';
 
 @Injectable()
 export class WindowsEffects {
@@ -133,7 +131,7 @@ export class WindowsEffects {
 
   constructor(
     private actions$: Actions,
-    private store: Store<fromRoot.State>,
+    private store: Store<RootState>,
     private windowService: WindowService
   ) {}
 }
