@@ -1,0 +1,52 @@
+import { createSelector, Store } from '@ngrx/store';
+import { PerWindowState } from 'altair-graphql-core/build/types/state/per-window.interfaces';
+import { getInitialState } from './query.reducer';
+import { selectWindowState } from '../windows/selectors';
+
+export const selectQueryState = (windowId: string) =>
+  createSelector(
+    selectWindowState(windowId),
+    (state) => state?.query ?? getInitialState()
+  );
+export const getQueryState = (state: PerWindowState) =>
+  state ? state.query : { ...getInitialState() };
+export const getQueryResponses = createSelector(
+  getQueryState,
+  (state) => state.responses ?? []
+);
+export const getResponseStatus = createSelector(
+  getQueryState,
+  (state) => state.responseStatus
+);
+export const getResponseTime = createSelector(
+  getQueryState,
+  (state) => state.responseTime
+);
+export const getResponseStatusText = createSelector(
+  getQueryState,
+  (state) => state.responseStatusText
+);
+export const getResponseHeaders = createSelector(
+  getQueryState,
+  (state) => state.responseHeaders
+);
+export const isSubscribed = createSelector(
+  getQueryState,
+  (state) => state.isSubscribed
+);
+export const getAutoscrollResponseList = createSelector(
+  getQueryState,
+  (state) => state.autoscrollResponseList
+);
+export const getSelectedOperation = createSelector(
+  getQueryState,
+  (state) => state.selectedOperation ?? null
+);
+export const getQueryOperations = createSelector(
+  getQueryState,
+  (state) => state.operations || []
+);
+export const getRequestScriptLogs = createSelector(
+  getQueryState,
+  (state) => state.requestScriptLogs || []
+);

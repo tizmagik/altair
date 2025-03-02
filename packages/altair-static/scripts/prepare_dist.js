@@ -6,19 +6,21 @@ ncp.limit = 16;
 
 const deleteFolderRecursive = function(path) {
   if (fs.existsSync(path)) {
-    fs.readdirSync(path).forEach(function(file, index){
-      var curPath = path + "/" + file;
-      if (fs.lstatSync(curPath).isDirectory()) { // recurse
+    fs.readdirSync(path).forEach(function(file, index) {
+      const curPath = path + '/' + file;
+      if (fs.lstatSync(curPath).isDirectory()) {
+        // recurse
         deleteFolderRecursive(curPath);
-      } else { // delete file
+      } else {
+        // delete file
         fs.unlinkSync(curPath);
       }
     });
     fs.rmdirSync(path);
   }
 };
-
-const distSrc = path.join(__dirname, '../../../dist'); // From the main altair dist folder
+const altairAppDistFile = require.resolve('@altairgraphql/app'); // should resolve to <altair-dir>/dist/main.js
+const distSrc = path.join(altairAppDistFile, '..'); // From the altair-app dist folder
 const distDestination = path.join(__dirname, '../build/dist'); // To altair-static dist folder
 deleteFolderRecursive(distDestination);
 fs.mkdirSync(distDestination, { recursive: true });
@@ -36,9 +38,10 @@ const indexHtmlFile = path.join(distDestination, 'index.html');
  * Set the scripts and styles in template.html
  * Add template.html to dist directory.
  */
-ncp(distSrc, distDestination, function (err) {
+ncp(distSrc, distDestination, function(err) {
   if (err) {
-    return console.error(err);
+    console.error(err);
+    throw err;
   }
   console.log('Done copying dist folder!');
 
@@ -46,15 +49,18 @@ ncp(distSrc, distDestination, function (err) {
 
   // Adjust the base URL to be relative to the current path
   // indexHtmlStr = indexHtmlStr.replace('<base href="/">', '<base href="https://cdn.jsdelivr.net/npm/altair-static/dist/">'
-    // /*'<base href="./">'*/);
+  // /*'<base href="./">'*/);
 
   // Write the new string back to file
   // fs.writeFileSync(indexHtmlFile, indexHtmlStr, 'utf8');
 
   try {
-    const stats = JSON.parse(fs.readFileSync(path.resolve(distSrc, 'stats.json')));
+    const stats = JSON.parse(
+      fs.readFileSync(path.resolve(distSrc, 'stats.json'))
+    );
 
-    let htmlString = fs.readFileSync(path.resolve(srcDir, 'index.html'), 'utf8')
+    const htmlString = fs
+      .readFileSync(path.resolve(srcDir, 'index.html'), 'utf8')
       // Set base to ./
       .replace('<base href="/">', '<base href="./">')
       // Set scripts and styles
@@ -70,8 +76,7 @@ ncp(distSrc, distDestination, function (err) {
 
     // Remove README assets
     deleteFolderRecursive(path.join(distDestination, 'assets/img/readme'));
-
-  } catch(err) {
+  } catch (err) {
     console.error('stats.json not found', err);
   }
 });

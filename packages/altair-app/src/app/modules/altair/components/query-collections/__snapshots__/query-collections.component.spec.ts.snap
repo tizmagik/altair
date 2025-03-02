@@ -1,0 +1,117 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`QueryCollectionsComponent should render passed collections correctly 1`] = `
+<app-query-collections>
+  <div
+    class="query-collections-wrapper"
+  >
+    <div
+      class="query-collections__inner"
+    >
+      <div
+        class="query-collections__title"
+      >
+          
+      </div>
+      <div
+        class="query-collections__actions clearfix"
+      >
+        <button
+          class="btn btn--small"
+          data-test-id="import-collection"
+          nz-tooltip=""
+          nztooltipplacement="bottom"
+          type="button"
+        >
+          <app-icon
+            name="log-in"
+          />
+        </button>
+        
+        
+        <div
+          class="query-collections__actions--right"
+        >
+          <button
+            class="btn btn--small"
+            nz-dropdown=""
+            nztrigger="click"
+            type="button"
+          >
+            
+            
+              
+            
+            
+          </button>
+          
+          <nz-dropdown-menu>
+            <ul
+              nz-menu=""
+            >
+              <li
+                nz-menu-item=""
+              >
+                  
+              </li>
+              
+              <li
+                nz-menu-item=""
+              >
+                  
+              </li>
+              
+              <li
+                nz-menu-item=""
+              >
+                  
+              </li>
+              
+              <li
+                nz-menu-item=""
+              >
+                  
+              </li>
+              
+            </ul>
+            
+          </nz-dropdown-menu>
+        </div>
+      </div>
+      <div
+        class="query-collections__workspace-select-wrapper"
+      >
+        <nz-form-label>
+          
+        </nz-form-label>
+        
+        <nz-form-control>
+          <nz-select
+            class="dialog-block"
+            name="collection"
+            nzplaceholder="Choose"
+          >
+            <nz-option
+              nzvalue=""
+            />
+            
+            
+          </nz-select>
+          
+        </nz-form-control>
+        
+      </div>
+      <div
+        class="query-collections__items-wrapper"
+      >
+        <app-query-collection-item />
+        <app-query-collection-item />
+        <app-query-collection-item />
+        
+        
+      </div>
+    </div>
+    
+  </div>
+</app-query-collections>
+`;
