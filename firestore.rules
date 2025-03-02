@@ -1,0 +1,211 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      // default rules applied to all documents and collections, unless an explicit rule is added
+      // https://firebase.google.com/docs/firestore/security/rules-structure#recursive_wildcards
+      allow read, write: if false;
+    }
+
+    match /users/{userId} {
+      allow create: if isCurrentUser(userId);
+      allow read: if isValidSignedInUser();
+      allow update: if isCurrentUser(userId);
+      
+      match /counters/{counterId} {
+        allow read: if isCurrentUser(userId);
+      }
+
+      match /checkout_sessions/{id} {
+        allow read, write: if isCurrentUser(userId);
+      }
+      match /subscriptions/{id} {
+        allow read: if isCurrentUser(userId);
+      }
+      match /payments/{id} {
+        allow read: if isCurrentUser(userId);
+      }
+    }
+
+    // Needed for collection group queries?
+    match /{path=**}/query_collections/{collectionId} {
+      allow create: if requestBelongsToCurrentUser();
+      allow read: if resource == null || resourceBelongsToCurrentUser() || resourceBelongsToUsersTeam();
+      allow update, delete: if resourceBelongsToCurrentUser() || resourceBelongsToUsersTeam();
+    }
+    match /{path=**}/queries/{queryId} {
+      allow create: if isValidSignedInUser() && requestBelongsToCurrentUser() && getQueriesCount() < getMaximumAllowedQueriesCount();
+      allow read: if resourceBelongsToCurrentUser() || resourceBelongsToUsersTeam();
+      allow update, delete: if resourceBelongsToCurrentUser() || resourceBelongsToUsersTeam();
+    }
+
+    match /teams/{teamId} {
+      allow create: if isValidSignedInUser() && requestBelongsToCurrentUser() && getTeamsCount() < getCurrentPlanConfig().max_team_count;
+      allow read: if resourceBelongsToCurrentUser() || currentUserIsTeamMember(teamId);
+      allow update: if resourceBelongsToCurrentUser();
+      allow delete: if resourceBelongsToCurrentUser();
+
+      match /{path=**}/invitations/{invitationId} {
+        // TODO:
+        allow read, write: if false;
+      }
+    }
+
+    match /team_memberships/{membershipId} {
+      allow create: if isValidSignedInUser() && (isTeamAdmin(request.auth.uid, request.resource.data.teamUid) || isTeamOwner(request.auth.uid, request.resource.data.teamUid)) && userDataExists(request.resource.data.uid) && getUserData(request.resource.data.uid).email == request.resource.data.email && getTeamMembershipsCount(request.resource.data.teamUid) < getCurrentPlanConfig().max_team_member_count; // TODO: only allow admins
+      allow read: if request.auth.uid == resource.data.uid || currentUserIsTeamMember(resource.data.teamUid) || isTeamOwner(request.auth.uid, resource.data.teamUid);
+      allow update: if isTeamOwner(request.auth.uid, resource.data.teamUid); // TODO: Allow admins
+      allow delete: if false; // TODO: Handle. Owner can delete anyone but themself. Admin can delete anyone but owner.
+    }
+
+    match /product_configs/{id} {
+      allow read: if true;
+
+      match /prices/{id} {
+        allow read: if true;
+      }
+
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+
+    // --- Helper functions --- //
+
+    function nonEmptyStr(val) {
+      return val != null && val != '';
+    }
+
+    function isValidSignedInUser() {
+      return isSignedIn() && currentUserDataExists();
+    }
+
+    function requestMatchesUID() {
+      return request.auth.uid == request.resource.data.uid;
+    }
+
+    function resourceMatchesUID() {
+      return request.auth.uid == resource.data.uid;
+    }
+
+    function requestBelongsToCurrentUser() {
+      return isValidSignedInUser() && request.auth.uid == request.resource.data.ownerUid;
+    }
+
+    function resourceBelongsToCurrentUser() {
+      return isValidSignedInUser() && resourceBelongsToUser(request.auth.uid);
+    }
+
+    function resourceBelongsToUser(userId) {
+      return 'ownerUid' in resource.data ? userId == resource.data.ownerUid : false;
+    }
+
+    function resourceBelongsToTeam(teamId) {
+      return resource.data.teamUid == teamId;
+    }
+
+    function isTeamMember(userId, teamId) {
+      return nonEmptyStr(teamId) && nonEmptyStr(userId) && exists(/databases/$(database)/documents/team_memberships/$(teamMembershipId(teamId, userId))); // teamId in get(/databases/$(database)/documents/users/$(userId)/meta/teams).data.items; // TODO: check user's team list in user/x/teams subcollection list (maybe hold off on this for now since the current approach works)
+    }
+
+    function isTeamAdmin(userId, teamId) {
+      return nonEmptyStr(teamId) && nonEmptyStr(userId) && get(/databases/$(database)/documents/team_memberships/$(teamMembershipId(teamId, userId))).data.role == 'admin'; // TODO: check user's team list in user/x/teams subcollection list (maybe hold off on this for now since the current approach works)
+    }
+
+    function isTeamOwner(userId, teamId) {
+      let teamData = get(/databases/$(database)/documents/teams/$(teamId)).data;
+      return nonEmptyStr(teamId) && nonEmptyStr(userId) && 'ownerUid' in teamData && teamData.ownerUid == userId;
+    }
+
+    function currentUserIsTeamMember(teamId) {
+      return isTeamMember(request.auth.uid, teamId);
+    }
+
+    function resourceBelongsToUsersTeam() {
+      return isTeamOwner(request.auth.uid, resource.data.teamUid) || currentUserIsTeamMember(resource.data.teamUid);
+    }
+
+    function teamMembershipId(teamId, userId) {
+      return teamId + ':' + userId;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function emailVerified() {
+      return request.auth.token.email_verified;
+    }
+    function currentUserDataExists() {
+      return request.auth != null && userDataExists(request.auth.uid);
+    }
+    function userDataExists(userId) {
+      return nonEmptyStr(userId) && exists(/databases/$(database)/documents/users/$(userId));
+    }
+
+    // [READ] Data that exists on the Firestore document
+    function existingData() {
+      return resource.data;
+    }
+    // [WRITE] Data that is sent to a Firestore document
+    function incomingData() {
+      return request.resource.data;
+    }
+
+    // Does the logged-in user match the requested userId?
+    function isCurrentUser(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Fetch a user from Firestore
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function getCounterValue(counterId) {
+      return !exists(/databases/$(database)/documents/users/$(request.auth.uid)/counters/$(counterId)) ? 0 : get(/databases/$(database)/documents/users/$(request.auth.uid)/counters/$(counterId)).data.val;
+    }
+
+    function getTeamCounterValue(teamId, counterId) {
+      return !exists(/databases/$(database)/documents/teams/$(teamId)/counters/$(counterId)) ? 0 : get(/databases/$(database)/documents/teams/$(teamId)/counters/$(counterId)).data.val;
+    }
+
+    function getQueriesCount() {
+      return getCounterValue('queries');
+    }
+
+    function getTeamsCount() {
+      return getCounterValue('teams');
+    }
+
+    function getTeamMembershipsCount(teamId) {
+      return getTeamCounterValue(teamId, 'teams');
+    }
+
+    function getMaximumAllowedQueriesCount() {
+      return getCurrentPlanConfig().max_query_count;
+    }
+
+    // you can set a `firebaseRole` metadata value on the Stripe product
+    function hasStripeRole(role) {
+      return ('stripeRole' in request.auth.token) && request.auth.token.stripeRole == role;
+    }
+
+    // default to the `free` role
+    function getStripeRole() {
+      return ('stripeRole' in request.auth.token) ? request.auth.token.stripeRole : 'free';
+    }
+
+    function hasFreePlan() {
+      return hasStripeRole('free');
+    }
+
+    function getPlanConfig(stripeRole) {
+      return get(/databases/$(database)/documents/plan_configs/$(stripeRole)).data;
+    }
+
+    function getCurrentPlanConfig() {
+      return getPlanConfig(getStripeRole());
+    }
+
+  }
+}

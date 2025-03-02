@@ -1,0 +1,207 @@
+.window-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(var(--rgb-theme-bg), 0.8);
+  z-index: 50;
+  padding: 10px;
+  min-width: 200px;
+  border-radius: 4px;
+  text-align: center;
+  backdrop-filter: blur(3px) saturate(0.5);
+
+  .loader-img {
+    vertical-align: middle;
+    width: 30px;
+    animation-duration: 1.5s;
+    animation-name: pulse;
+  }
+}
+
+// https://codepen.io/nzbin/pen/GGrXbp
+.dot-flashing {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: var(--primary-color);
+  color: var(--primary-color);
+  animation: dot-flashing 1s infinite linear alternate;
+  animation-delay: 0.5s;
+}
+.dot-flashing::before, .dot-flashing::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+.dot-flashing::before {
+  left: -15px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: var(--primary-color);
+  color: var(--primary-color);
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+.dot-flashing::after {
+  left: 15px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: var(--primary-color);
+  color: var(--primary-color);
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 1s;
+}
+
+@keyframes dot-flashing {
+  0% {
+    background-color: var(--primary-color);
+  }
+  50%, 100% {
+    background-color: rgba(var(--rgb-primary), 0.2);
+  }
+}
+
+.window-loader__loader-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+}
+
+.window-loader__image-container {
+  margin: 20px;
+}
+
+.window-loader__tips {
+  display: grid;
+  grid-template-rows: 1fr; // transition from 0fr to 1fr to transition height
+  transition: grid-template-rows 0.5s ease-out;
+}
+.window-loader__tips-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  max-width: 450px;
+  border: 1px solid var(--theme-off-border-color);
+  border-radius: 10px;
+  padding: 10px;
+  overflow: hidden;
+}
+.window-loader__tips-title {
+  width: fit-content;
+  padding: 0 10px;
+  font-size: fontsize(16);
+  margin: 0;
+}
+
+.window-loader__content {
+  background: linear-gradient(
+    45deg,
+    var(--primary-color),
+    var(--secondary-color),
+    var(--tertiary-color)
+  );
+  background-size: 200% 200%;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+  // animation: bg-gradient 5s ease infinite;
+  transition-duration: 0.3s;
+  will-change: background;
+}
+.window-loader__loading-text {
+  font-size: fontsize(16);
+}
+
+@keyframes bg-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.loader__rotating-border {
+  --padding: 10px;
+  --border-radius: 100%;
+  --border-size: 2px;
+  --border-bg: conic-gradient(
+    var(--primary-color),
+    var(--secondary-color),
+    var(--tertiary-color),
+    var(--primary-color)
+  );
+
+  position: relative;
+  overflow: hidden;
+  font-size: 2rem;
+  padding: calc(var(--padding) + var(--border-size));
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+
+  &::before {
+    content: '';
+    display: block;
+    background: var(--border-bg);
+    width: calc(100% * 1.41421356237);
+    padding-bottom: calc(100% * 1.41421356237);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 100%;
+    z-index: -2;
+    animation: spin 5s linear infinite;
+  }
+  &--reverse::before {
+    animation-direction: reverse;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    inset: var(--border-size);
+    background: var(--theme-bg-color);
+    z-index: -1;
+    border-radius: calc(var(--border-radius) - var(--border-size));
+  }
+}

@@ -1,0 +1,46 @@
+@if (options.closeButton) {
+  <button (click)="remove()" class="toast-close-button" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+}
+@if (title) {
+  <div
+    [class]="options.titleClass"
+    [attr.aria-label]="title"
+    class="app-dialog-section"
+  >
+    {{ title }}
+    @if (duplicatesCount) {
+      [{{ duplicatesCount + 1 }}]
+    }
+  </div>
+}
+@if (message && options.enableHtml) {
+  <div
+    role="alertdialog"
+    aria-live="polite"
+    class="app-dialog-section"
+    [class]="options.messageClass"
+    [innerHTML]="message"
+  ></div>
+}
+@if (message && !options.enableHtml) {
+  <div
+    role="alertdialog"
+    aria-live="polite"
+    class="app-dialog-section"
+    [class]="options.messageClass"
+    [attr.aria-label]="message"
+  >
+    {{ message }}
+  </div>
+}
+<div>
+  <button class="btn btn--primary" (click)="action($event)">Yes</button>
+  <button class="btn" (click)="remove()">No</button>
+</div>
+@if (options.progressBar) {
+  <div>
+    <div class="toast-progress" [style.width]="width + '%'"></div>
+  </div>
+}
