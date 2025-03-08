@@ -1,0 +1,204 @@
+button {
+  cursor: pointer;
+
+  &:focus {
+    outline: 0;
+  }
+}
+
+// New button styles
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: fontsize(var(--btn-font-size, 14));
+  line-height: 1;
+  background: var(--btn-bg, rgba(var(--rgb-theme-font), 0.05));
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--btn-border-color, transparent);
+  color: var(--btn-font-color, var(--theme-font-color));
+  border-radius: 4px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
+  padding-inline: var(--btn-padding-inline, 15px);
+  padding-block: var(--btn-padding-block, 10px);
+  transition: all 0.3s ease;
+  cursor: var(--btn-cursor, pointer);
+  opacity: var(--btn-opacity, 1);
+
+  &:hover {
+    --btn-bg: var(--btn-hover-bg, rgba(var(--rgb-theme-font), 0.1));
+  }
+}
+.btn--glass {
+}
+.btn--primary {
+  --btn-bg: rgba(var(--rgb-primary), 0.8);
+  &:hover {
+    --btn-bg: rgba(var(--rgb-primary), 1);
+  }
+}
+.btn--secondary {
+}
+.btn--destructive {
+  --btn-bg: rgba(var(--rgb-red), 0.8);
+  &:hover {
+    --btn-bg: rgba(var(--rgb-red), 1);
+  }
+}
+.btn--disabled {
+  --btn-cursor: not-allowed;
+  --btn-opacity: 0.5;
+}
+.btn--loading {
+}
+.btn--icon {
+}
+.btn--bordered {
+  --btn-border-color: rgba(var(--rgb-theme-font), 0.1);
+}
+.btn--small {
+  --btn-font-size: 12;
+  --btn-padding-inline: 10px;
+  --btn-padding-block: 5px;
+}
+.btn--full-width {
+  width: 100%;
+}
+.btn--light {
+  &.btn--destructive {
+    --btn-bg: rgba(var(--rgb-red), 0.1);
+    --btn-font-color: var(--red-color);
+    &:hover {
+      --btn-bg: rgba(var(--rgb-red), 0.2);
+    }
+  }
+  &.btn--primary {
+    --btn-bg: rgba(var(--rgb-primary), 0.1);
+    --btn-font-color: var(--primary-color);
+    &:hover {
+      --btn-bg: rgba(var(--rgb-primary), 0.2);
+    }
+  }
+}
+
+.icon-button {
+  border: 0;
+  border-radius: 4px;
+  background: var(--theme-bg-color);
+  color: var(--theme-font-color);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: var(--theme-off-bg-color);
+  }
+}
+
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: fontsize(14);
+  border: 0;
+  padding: 0 20px;
+  line-height: 40px;
+  height: 40px;
+  background: transparent;
+  color: var(--primary-color);
+  vertical-align: middle;
+  cursor: pointer;
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: normal;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+
+  img {
+    vertical-align: middle;
+  }
+
+  &:hover {
+    background: var(--theme-off-bg-color);
+  }
+
+  &:focus {
+    outline: 0;
+  }
+
+  &.full-width {
+    width: 100%;
+  }
+
+  &.active-grey {
+    background: var(--theme-off-bg-color);
+  }
+
+  &.active-destructive {
+    background: var(--theme-off-bg-color);
+    color: var(--red-color);
+  }
+
+  &.active-primary {
+    background: var(--primary-color);
+    color: var(--white-color);
+    position: relative;
+    z-index: 1;
+
+    &::before {
+      background-image: linear-gradient(
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.2)
+      );
+      content: '';
+      height: 100%;
+      left: 0;
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      transition: opacity 0.4s;
+      width: 100%;
+      z-index: -1;
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+}
+
+.cancel-request-button {
+  height: auto;
+  line-height: 20px;
+  margin: 10px 0;
+  background: var(--theme-off-bg-color);
+  color: var(--theme-font-color);
+}
+
+.subscription-button {
+  font-size: fontsize(14);
+  border: 0;
+  padding: 0 15px;
+  line-height: 25px;
+  height: 25px;
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 4px;
+  background: var(--theme-off-bg-color);
+  color: var(--theme-font-color);
+}
+
+.subscription-button--stop {
+  background: var(--red-color);
+  color: var(--white-color);
+  transition: all 0.3s ease;
+
+  &:hover {
+    // TODO: Figure out how to transition CSS gradients for the button hover effect
+    background-image: linear-gradient(
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0.2)
+    );
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@altairgraphql/emails",
+  "version": "8.2.1",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@react-email/components": "^0.0.25",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "^9.0.4",
+    "@types/prismjs": "^1.26.5",
+    "@types/react": "^18.3.12",
+    "react-email": "^3.0.1",
+    "typescript": "catalog:"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "email dev",
+    "bootstrap": "pnpm build"
+  },
+  "private": true
+}

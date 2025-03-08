@@ -1,0 +1,21 @@
+{
+  "name": "@altairgraphql/api-utils",
+  "version": "8.2.1",
+  "dependencies": {
+    "@altairgraphql/db": "workspace:*",
+    "altair-graphql-core": "workspace:*",
+    "ky": "^0.33.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "typescript": "catalog:"
+  },
+  "license": "MIT",
+  "main": "build/index.js",
+  "private": true,
+  "scripts": {
+    "build": "node ./scripts/build.cjs",
+    "bootstrap": "pnpm build"
+  }
+}

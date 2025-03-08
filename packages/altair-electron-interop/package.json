@@ -1,0 +1,19 @@
+{
+  "name": "@altairgraphql/electron-interop",
+  "version": "8.2.1",
+  "dependencies": {
+    "altair-graphql-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "electron": "catalog:",
+    "typescript": "catalog:"
+  },
+  "license": "MIT",
+  "main": "build/index.js",
+  "private": true,
+  "scripts": {
+    "build": "tsc --build",
+    "bootstrap": "pnpm build"
+  }
+}

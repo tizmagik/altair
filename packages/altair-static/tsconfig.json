@@ -1,17 +1,15 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "build/",
     "rootDir": "src",
     "declaration": true,
-    "target": "es5",
+    "declarationMap": true,
+    "target": "es2020",
     "module": "commonjs",
     "sourceMap": true,
-    "lib": [
-      "dom",
-      "esnext"
-    ],
-    "types": [
-      "node"
-    ]
+    // "skipLibCheck": true,
+    "lib": ["dom", "esnext"],
+    "types": ["node", "jest"]
   }
 }
