@@ -1,0 +1,217 @@
+// You can add global styles to this file, and also import other style files
+
+* {
+  box-sizing: border-box;
+  outline: none;
+  // cursor: auto;
+}
+
+html {
+  font-size: calc(var(--rem-base) * 1px);
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-size: fontsize(var(--body-font-size));
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  background: radial-gradient(
+      farthest-corner at bottom right,
+      rgba(var(--rgb-primary), 0.5) 0%,
+      transparent 80%
+    ),
+    radial-gradient(
+      farthest-corner at top left,
+      rgba(var(--rgb-primary), 0.5) 0%,
+      transparent 20%
+    ),
+    radial-gradient(var(--theme-bg-color), var(--theme-bg-color));
+  // background: pink; // TODO: remove after testing
+}
+
+input {
+  color: var(--theme-font-color);
+  background: transparent;
+}
+
+input[type='text'],
+input[type='search'],
+input[type='url'] {
+  display: block;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+    Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol';
+
+  &:focus {
+    outline: 0;
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--theme-font-color);
+}
+
+::selection {
+  color: var(--theme-bg-color);
+  background: var(--theme-font-color);
+}
+
+:root {
+  accent-color: var(--primary-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@mixin clearfix() {
+  &::before,
+  &::after {
+    content: '';
+    display: table;
+  }
+
+  &::after {
+    clear: both;
+  }
+}
+
+@mixin main-content-col {
+  position: relative;
+  // padding-left: 0.5rem;
+  flex: 1;
+}
+
+.hide {
+  display: none !important;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.text-align-left {
+  text-align: left;
+}
+
+.text-align-right {
+  text-align: right;
+}
+
+.anim {
+  will-change: transform;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.anim-rotate {
+  animation-name: anim-rotate;
+}
+
+.spacer--small {
+  margin-bottom: 4px;
+}
+
+.spacer {
+  margin-bottom: 16px;
+}
+
+.spacer--large {
+  margin-bottom: 32px;
+}
+
+.p-5 {
+  padding: 5px;
+}
+
+.p-10 {
+  padding: 10px;
+}
+
+.mb-5 {
+  margin-bottom: 5px;
+}
+
+.mb-10 {
+  margin-bottom: 10px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+@keyframes anim-rotate {
+  0% {
+    transform: rotate(0deg) translateZ(0);
+  }
+
+  100% {
+    transform: rotate(359deg) translateZ(0);
+  }
+}
+
+.glassy-border {
+  position: relative;
+  &:before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 20%,
+        rgba(255, 255, 255, 0.1) 100%
+      )
+      border-box;
+    mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+}
+
+@mixin show-transition {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    visibility 0s var(--app-easing) 0s,
+    opacity 300ms;
+}
+
+@mixin hide-transition {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    visibility 0s var(--app-easing) 300ms,
+    opacity 300ms;
+}
+
+@mixin debug() {
+  @if $debug {
+    background: rgb(random(255), random(255), random(255));
+  }
+}

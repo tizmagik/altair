@@ -5,6 +5,7 @@
 This is a koa middleware for mounting an instance of altair GraphQL client.
 
 ### Installation
+
 This is a node module and can be installed using npm:
 
 ```
@@ -30,15 +31,13 @@ createRouteExplorer({
   url: '/altair',
   router,
   opts: {
-    endpoint: '/graphql',
+    endpointURL: '/graphql',
     subscriptionsEndpoint: `ws://localhost:4000/subscriptions`,
     initialQuery: `{ getData { id name surname } }`,
   },
 });
 
-app
-  .use(router.routes())
-  .use(router.allowedMethods());
+app.use(router.routes()).use(router.allowedMethods());
 
 app.listen(3500);
 
@@ -48,6 +47,7 @@ app.listen(3500);
 An instance of Altair GraphQL Client would be available at `/altair` of your server.
 
 ### Contributing
+
 Everyone is welcome to contribute. See anything that needs improving, create an issue. And if you're up for it, create a PR! :D
 
 ### License

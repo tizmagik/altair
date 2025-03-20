@@ -1,0 +1,51 @@
+<nz-modal
+  [nzVisible]="showDialog"
+  (nzVisibleChange)="toggleDialogChange.next($event)"
+  [nzCloseIcon]="'close-circle'"
+  [nzTitle]="modalTitle"
+  [nzContent]="modalContent"
+  [nzFooter]="modalFooter"
+  (nzOnCancel)="toggleDialogChange.next($event)"
+>
+  <ng-template #modalTitle>
+    <div class="app-dialog-header">
+      <div class="app-dialog-title">{{ 'HISTORY_TEXT' | translate }}</div>
+      {{ 'HISTORY_SUB_TEXT' | translate }}
+    </div>
+  </ng-template>
+
+  <ng-template #modalContent>
+    <div class="app-dialog-body">
+      <div class="history-container">
+        @for (
+          item of historyList;
+          track trackByIndex(index, item);
+          let index = $index
+        ) {
+          <div class="history-item" (click)="restoreHistory(index)">
+            {{ item.query }}
+          </div>
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #modalFooter>
+    <div class="app-dialog-footer">
+      <button
+        class="btn btn--primary right"
+        track-id="close_history_dialog"
+        (click)="toggleDialogChange.next($event)"
+      >
+        {{ 'DONE_BUTTON' | translate }}
+      </button>
+      <button
+        class="btn left"
+        track-id="clear_history_items"
+        (click)="clearHistory()"
+      >
+        {{ 'HISTORY_CLEAR_TEXT' | translate }}
+      </button>
+    </div>
+  </ng-template>
+</nz-modal>

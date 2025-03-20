@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "build/",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "target": "es2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["dom", "esnext"],
+    // "types": ["node", "chrome"],
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "strictNullChecks": true
+  }
+}

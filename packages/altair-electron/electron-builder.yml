@@ -1,35 +1,74 @@
 appId: com.xkoji.altair
 productName: Altair GraphQL Client
+electronVersion: 33.2.1
 directories:
   buildResources: resources
   output: out
 files:
   - '**/*'
+  - '!**/*.ts'
+  - '!**/*.ts.map'
+  - '!**/*.js.map'
 afterSign: scripts/notarize.js
 mac:
+  artifactName: ${name}_${version}_${arch}_${os}.${ext}
   category: public.app-category.developer-tools
-  icon: resources/icon.png
-  artifactName: ${name}_${version}_${arch}_mac.${ext}
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  icon: resources/mac_icon.icns
   hardenedRuntime: true
+  darkModeSupport: true
   entitlements: resources/entitlements.mac.plist
   entitlementsInherit: resources/entitlements.mac.plist
+  strictVerify: false
   # gatekeeperAssess: false
 dmg:
   icon: resources/icon.png
 linux:
   artifactName: ${name}_${version}_${arch}_linux.${ext}
   icon: resources/icons
+  category: Development
+  maintainer: info@altairgraphql.dev
+  target:
+    - target: AppImage
+      arch:
+        - x64
+        - arm64
+    - deb
+    - snap
+    # - flatpak
+appImage:
+  category: Development
 snap:
-  publish: github
+  publish:
+    - provider: github
+      releaseType: release
+    - provider: snapStore
+      channels: stable
+  layout:
+    /usr/share/libdrm:
+      bind: $SNAP/usr/share/libdrm
 win:
   artifactName: ${name}_${version}_${arch}_win.${ext}
+# flatpak:
+#   artifactName: ${name}_${version}_${arch}_flatpak.${ext}
+#   runtime: org.freedesktop.Platform
+#   runtimeVersion: '23.08'
+#   baseVersion: '23.08'
 electronCompile: false
 protocols:
   name: Altair GraphQL Client
   schemes:
     - altair
   role: Viewer
-artifactName: ${name}_${version}_${arch}.${ext}
+artifactName: ${name}_${version}_${arch}_${os}.${ext}
 publish:
   provider: github
   releaseType: release
@@ -48,4 +87,7 @@ fileAssociations:
     role: Viewer
   - ext: agbkp
     description: Altair GraphQL Backup
+    role: Viewer
+  - ext: agx
+    description: Altair GraphQL File
     role: Viewer

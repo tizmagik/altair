@@ -1,0 +1,42 @@
+.cm6-full-height {
+  height: 100%;
+
+  .editor-ref {
+    height: 100%;
+  }
+
+  .cm-editor {
+    height: 100%;
+  }
+}
+.cm-panels {
+  z-index: 1;
+}
+
+.cm-editor {
+  --result-default: var(--theme-font-color);
+  --result-string: var(--red-color);
+
+  .cm-line {
+    color: var(--theme-font-color);
+    font-family: var(--editor-font-family);
+    font-size: fontsize(var(--editor-font-size));
+    line-height: 1.5;
+    caret-color: var(--editor-cursor-color);
+  }
+
+  .cm-gutters {
+    background: rgba(var(--rgb-theme-bg), 0.05);
+    opacity: 0.8;
+    color: var(--theme-font-color);
+    border: 0;
+  }
+
+  .cm-lineNumbers {
+    opacity: 0.5;
+  }
+
+  .cm-focused {
+    outline: none !important; // This has proven to be a very persistent styling so using important to override
+  }
+}

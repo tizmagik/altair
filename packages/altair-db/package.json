@@ -1,0 +1,31 @@
+{
+  "name": "@altairgraphql/db",
+  "version": "8.2.1",
+  "dependencies": {
+    "@prisma/client": "^5.16.2",
+    "dotenv": "^16.4.5",
+    "prisma": "^5.16.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "ts-node": "^10.0.0",
+    "typescript": "catalog:"
+  },
+  "license": "MIT",
+  "main": "build/index.js",
+  "prisma": {
+    "seed": "node build/seed.js"
+  },
+  "private": true,
+  "scripts": {
+    "build": "tsc --build",
+    "bootstrap": "pnpm prisma:generate && pnpm build",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "prisma db seed",
+    "prisma:studio": "prisma studio",
+    "prod:prestart": "prisma migrate deploy && prisma db seed",
+    "postinstall": "pnpm prisma:generate"
+  }
+}

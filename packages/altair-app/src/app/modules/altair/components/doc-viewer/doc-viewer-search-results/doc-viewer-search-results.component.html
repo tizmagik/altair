@@ -1,0 +1,72 @@
+<div class="doc-viewer-search-results">
+  <div class="doc-viewer-search-results-title">
+    {{ 'DOCS_SEARCH_RESULTS_TEXT' | translate }}
+  </div>
+
+  @for (result of results; track resultTrackBy($index, result)) {
+    <div
+      class="doc-viewer-search-result-item"
+      (click)="goToItem(result)"
+      [@showResultItem]
+      >
+      @switch (result.cat) {
+        @case ('type') {
+          <span class="doc-viewer-search-result-cat cat-type">{{
+            'DOCS_TYPE_TEXT' | translate
+          }}</span>
+        }
+        @case ('field') {
+          @if (result.isQuery) {
+            <span
+              class="doc-viewer-search-result-cat cat-query"
+              >{{ getProperName(result.type || '') }}</span>
+          }
+          @if (!result.isQuery) {
+            <span
+              class="doc-viewer-search-result-cat cat-field"
+              >{{ 'DOCS_FIELD_TEXT' | translate }}</span
+              >
+          }
+        }
+      }
+      <div class="doc-viewer-search-result-item-inner">
+        @if (!result.isQuery && result.type) {
+          <span
+            class="doc-viewer-search-result-parent-type"
+            (click)="goToItem(result)"
+            >{{ result.type }}.</span
+            >
+            }<span
+    [ngClass]="{
+      'doc-viewer-search-result-highlight': result.highlight !== 'argument'
+    }"
+            >{{ result.name }}</span
+            >
+            @if (result.args && result.args.length) {
+              (
+              @for (
+                arg of result.args; track resultArgTrackBy($index,
+                arg); let last = $last) {
+                <span
+      [ngClass]="{
+        'doc-viewer-search-result-highlight':
+          result.highlight === 'argument'
+      }"
+                  >
+                  <span>{{ arg.name }}</span
+                    >@if (!last) {
+                    <span>,</span>
+                  }
+                </span>
+              }
+              )
+            }
+          </div>
+          <div
+            class="doc-viewer-search-result-description"
+            markdown
+            [data]="result.description"
+          ></div>
+        </div>
+      }
+    </div>

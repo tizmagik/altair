@@ -1,46 +1,45 @@
 {
   "name": "altair-express-middleware",
-  "version": "2.3.8",
   "description": "Express middleware for altair graphql client",
-  "main": "./build/index.js",
-  "types": "./build/index.d.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 0",
-    "prepare-dist": "node scripts/prepare_dist.js",
-    "declarations": "tsc --declaration",
-    "prepare": "npm run declarations"
-  },
-  "engines": {
-    "node": ">= 6.9.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/imolorhe/altair.git"
-  },
-  "keywords": [
-    "altair",
-    "graphql",
-    "express",
-    "middleware"
-  ],
-  "author": "Samuel Imolorhe <samuelimolo4real@gmail.com> (https://sirmuel.design)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/imolorhe/altair/issues"
-  },
-  "homepage": "https://github.com/imolorhe/altair#readme",
+  "version": "8.2.1",
+  "author": "Samuel Imolorhe <altair@sirmuel.design> (https://sirmuel.design)",
+  "bugs": "https://github.com/altair-graphql/altair/issues",
   "dependencies": {
-    "altair-static": "^2.3.8",
-    "express": "^4.16.2"
+    "altair-static": "workspace:*",
+    "express": "^4.19.2"
   },
   "devDependencies": {
-    "@types/express": "^4.11.1",
-    "typescript": "^2.8.1"
+    "@types/express": "^4.17.13",
+    "@types/node": "^14.14.41",
+    "eslint-config-altair": "workspace:*",
+    "nodemon": "^2.0.2",
+    "ts-node": "^8.5.4",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">= 12"
   },
   "funding": {
     "type": "opencollective",
-    "url": "https://opencollective.com/altair",
-    "logo": "https://opencollective.com/altair/logo.txt"
+    "url": "https://opencollective.com/altair"
   },
-  "gitHead": "e5ce60f5a14997f1471a961ac76efacbb044df46"
+  "gitHead": "e5ce60f5a14997f1471a961ac76efacbb044df46",
+  "homepage": "https://github.com/altair-graphql/altair#readme",
+  "keywords": [
+    "altair",
+    "express",
+    "graphql",
+    "middleware"
+  ],
+  "license": "MIT",
+  "main": "./build/index.js",
+  "repository": "altair-graphql/altair.git",
+  "scripts": {
+    "declarations": "tsc --declaration",
+    "example": "nodemon example/index.ts",
+    "bootstrap": "pnpm declarations",
+    "prepare-dist": "node scripts/prepare_dist.js",
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "types": "./build/index.d.ts"
 }

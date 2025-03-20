@@ -1,0 +1,36 @@
+<nz-modal
+  [nzVisible]="showVariableDialog"
+  (nzVisibleChange)="toggleVariableDialog.emit($event)"
+  [nzTitle]="modalTitle"
+  [nzContent]="modalContent"
+  [nzFooter]="modalFooter"
+  (nzOnCancel)="toggleVariableDialog.emit()"
+>
+  <ng-template #modalTitle>
+    <div class="app-dialog-header">
+      <div class="app-dialog-title">{{ 'VARIABLES_TEXT' | translate }}</div>
+      {{ 'SET_VARIABLES_DIALOG_SUBTEXT' | translate }}
+    </div>
+  </ng-template>
+
+  <ng-template #modalContent>
+    <div class="app-dialog-body">
+      <app-variables-editor
+        [variables]="variables"
+        (variablesChange)="variablesChange.emit($event)"
+      ></app-variables-editor>
+    </div>
+  </ng-template>
+
+  <ng-template #modalFooter>
+    <div class="app-dialog-footer">
+      <button
+        class="btn btn--primary right"
+        track-id="close_set_variables_dialog"
+        (click)="toggleVariableDialog.emit($event)"
+      >
+        {{ 'SAVE_BUTTON' | translate }}
+      </button>
+    </div>
+  </ng-template>
+</nz-modal>

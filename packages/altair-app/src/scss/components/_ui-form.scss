@@ -1,0 +1,16 @@
+.ui-form__list-wrapper {
+  position: relative;
+}
+
+.ui-form__list-item-close {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  color: var(--red-color);
+  background: var(--theme-off-bg-color);
+  border-radius: 4px;
+  line-height: 1;
+  padding: 3px;
+  font-size: fontsize(12);
+  cursor: pointer;
+}

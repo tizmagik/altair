@@ -1,0 +1,1 @@
+# Altair GraphQL AI Plugin

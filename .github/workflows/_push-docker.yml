@@ -1,0 +1,88 @@
+name: docker-push-workflow
+
+on:
+  workflow_call:
+    inputs:
+      push:
+        description: 'Whether to push the Docker image'
+        required: true
+        type: boolean
+      release:
+        description: 'Whether to push as latest release'
+        required: false
+        default: false
+        type: boolean
+      version:
+        description: 'Version to use'
+        required: false
+        default: ''
+        type: string
+  workflow_dispatch:
+    inputs:
+      push:
+        description: 'Whether to push the Docker image'
+        required: true
+        type: boolean
+      release:
+        description: 'Whether to push as latest release'
+        required: false
+        default: false
+        type: boolean
+      version:
+        description: 'Version to use'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  docker-vars:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ inputs.version || format('{0}-{1}', github.sha, env.COMMIT_TIMESTAMP) }}
+    steps:
+      - name: Get Git commit timestamps
+        run: echo "COMMIT_TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_ENV
+      - run: echo "Exposing env vars"
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+        with:
+          daemon-config: |
+            {
+              "debug": true,
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          load: true
+          push: ${{ inputs.push }}
+          tags: |
+            ${{ inputs.push && inputs.release && format('{0}/altairgraphqlapi:latest', secrets.DOCKERHUB_USERNAME) || '' }}
+            ${{ inputs.push && inputs.version && format('{0}/altairgraphqlapi:{1}', secrets.DOCKERHUB_USERNAME, inputs.version) || '' }}
+            ${{ inputs.push && inputs.release && format('ghcr.io/{0}/altairgraphqlapi:latest', github.repository_owner) || '' }}
+            ${{ inputs.push && inputs.version && format('ghcr.io/{0}/altairgraphqlapi:{1}', github.repository_owner, inputs.version) || '' }}

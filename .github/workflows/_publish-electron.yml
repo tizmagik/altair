@@ -1,0 +1,210 @@
+name: electron-publish-workflow
+
+on:
+  workflow_call:
+    inputs:
+      node_version:
+        description: 'Node.js version to use'
+        default: '22'
+        type: string
+      build:
+        description: 'Whether to build'
+        required: false
+        default: true
+        type: boolean
+      publish:
+        description: 'Whether to publish'
+        required: false
+        default: true
+        type: boolean
+      publish_chocolatey:
+        description: 'Whether to publish to Chocolatey'
+        required: false
+        default: true
+        type: boolean
+    outputs:
+      # Map the workflow output(s) to job output(s)
+      version:
+        description: 'Built/published version from the workflow'
+        value: ${{ jobs.electron.outputs.version }}
+  workflow_dispatch:
+    inputs:
+      node_version:
+        description: 'Node.js version to use'
+        default: '22'
+        type: string
+      build:
+        description: 'Whether to build'
+        required: false
+        default: true
+        type: boolean
+      publish:
+        description: 'Whether to publish'
+        required: false
+        default: true
+        type: boolean
+      publish_chocolatey:
+        description: 'Whether to publish to Chocolatey'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  electron:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    # Map the job output(s) to step output(s)
+    outputs:
+      version: ${{ steps.getversion.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Use Node.js ${{ inputs.node_version }} on ${{ matrix.os }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: 'pnpm'
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: startsWith(matrix.os, 'macos')
+        with:
+          xcode-version: latest-stable
+      - run: pnpm i --frozen-lockfile
+      - uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          command: pnpm build:ci
+      # Update .npmrc file to support electron builder
+      # https://www.electron.build/#note-for-pnpm
+      - uses: nodef/npm-config.action@v1.0.0
+        with:
+          path: .npmrc # Path to the .npmrc file
+          reset: false
+          entries: |- # Entries to add
+            node-linker = hoisted
+      # install node_modules again with new configuration
+      - run: pnpm i --frozen-lockfile
+      # Create deploy ready source files for electron
+      - run: pnpm deploy --filter=altair out/elx-files
+
+      - name: Install Snapcraft
+        uses: samuelmeuli/action-snapcraft@v2
+        if: startsWith(matrix.os, 'ubuntu')
+        env:
+          SNAPCRAFT_TOKEN: ${{ secrets.SNAPCRAFT_TOKEN }}
+
+      - name: Prepare for app notarization
+        if: startsWith(matrix.os, 'macos')
+        # Import Apple API key for app notarization on macOS
+        run: |
+          mkdir -p ~/private_keys/
+          echo '${{ secrets.apple_api_key }}' > ~/private_keys/AuthKey_${{ secrets.apple_api_key_id }}.p8
+
+      - name: Install flatpak and flatpak-builder
+        run: sudo apt-get install -y flatpak flatpak-builder elfutils
+        if: startsWith(matrix.os, 'ubuntu')
+        continue-on-error: true
+      - name: Install flathub repo
+        continue-on-error: true
+        # Need to install flatpak dependencies manually
+        # https://github.com/electron/forge/issues/2662#issuecomment-1003900006
+        run: |
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && flatpak update --appstream
+          sudo flatpak install org.freedesktop.Sdk/x86_64/23.08 -y
+          sudo flatpak install org.freedesktop.Platform/x86_64/23.08 -y
+          sudo flatpak install org.electronjs.Electron2.BaseApp/x86_64/23.08 -y
+        if: startsWith(matrix.os, 'ubuntu')
+
+      - name:
+          Build/release Electron app
+          # disable for macos not in master branch, because code signing is skipped in pull requests
+        if: ${{ inputs.publish || !(startsWith(matrix.os, 'macos') && github.ref != 'refs/heads/master') }}
+        id: build-electron
+        uses: paneron/action-electron-builder@v1.8.1
+        with:
+          github_token: ${{ secrets.github_token }}
+          package_root: out/elx-files/
+          skip_build: true
+          skip_package_manager_install: true
+          mac_certs: ${{ secrets.mac_certs }}
+          mac_certs_password: ${{ secrets.mac_certs_password }}
+          args: ${{ inputs.publish && '--publish always' || '--publish never' }}
+          max_attempts: 3
+          package_manager: pnpm
+        env:
+          # macOS notarization API key
+          # https://www.codiga.io/blog/notarize-sign-electron-app/
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLEIDPASS: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+          DEBUG: '@malept/flatpak-bundler'
+
+      # chocolatey
+      - name: Read VERSION file
+        id: getversion
+        run: |
+          echo "::set-output name=version::$(cat VERSION)"
+      - name: Read VERSION file
+        id: getversionv2
+        run: |
+          echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+      - name: Add mask
+        run: |
+          echo "::add-mask::${{ secrets.CHOCOLATEY_API_KEY }}"
+      - name: chocolatey pack
+        if: startsWith(matrix.os, 'windows')
+        continue-on-error: true
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: pack chocolatey\altair-graphql.nuspec
+      # - name: chocolatey install (test choco packaging)
+      #   if: startsWith(matrix.os, 'windows')
+      #   uses: crazy-max/ghaction-chocolatey@v3
+      #   with:
+      #     args: install altair-graphql --version="${{ steps.getversion.outputs.version }}" --source="altair-graphql.${{ steps.getversion.outputs.version }}.nupkg"
+      # FIXME: chocolatey push is failing in the CI with the "request too large" error.
+      # It is unclear to me what the payload size limit is for the choco push command (the best info I could find about this is: https://github.com/chocolatey-community/chocolatey-packages/issues/1179).
+      # If this is really a problem, someone needs to figure out a proper solution for this (most likely changing it to a non-embedded package, or some other solution I'm not aware of).
+      - name: chocolatey push
+        if: ${{ startsWith(matrix.os, 'windows') && inputs.publish_chocolatey && inputs.publish }}
+        continue-on-error: true
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: push altair-graphql.${{ steps.getversion.outputs.version }}.nupkg -s https://push.chocolatey.org/ -k="'${{ secrets.CHOCOLATEY_API_KEY }}'"
+
+      - name: Upload source maps to Sentry (app)
+        if: startsWith(matrix.os, 'ubuntu')
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: ${{ inputs.publish && 'production' || '' }}
+          sourcemaps: packages/altair-app/dist/
+          version: ${{ inputs.publish && steps.getversion.outputs.version || '' }}
+          url_prefix: 'altair://-'
+          finalize: false
+      - name: Upload source maps to Sentry (electron)
+        if: startsWith(matrix.os, 'ubuntu')
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: ${{ inputs.publish && 'production' || '' }}
+          sourcemaps: out/elx-files/dist/
+          version: ${{ inputs.publish && steps.getversion.outputs.version || '' }}
+          url_prefix: 'app:///dist'
+
+      - name: Upload electron builds
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-builds-${{ matrix.os }}
+          path: out/elx-files/out/**

@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WindowSwitcherComponent should render correctly 1`] = `
+<app-window-switcher
+  class="window-switcher__no-scrollbar"
+>
+  <ul
+    cdkdroplist=""
+    cdkdroplistorientation="horizontal"
+    class="window-switcher__list window-switcher__no-scrollbar"
+  >
+    
+    <li
+      class="window-switcher__item"
+    >
+        
+    </li>
+    
+  </ul>
+  
+</app-window-switcher>
+`;

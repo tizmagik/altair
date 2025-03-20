@@ -1,0 +1,33 @@
+<div class="fancy-input-container">
+  <input
+    #fancyInputEl
+    type="text"
+    class="fancy-input-content fancy-input-element"
+    [placeholder]="placeholder"
+    [(ngModel)]="value"
+    (input)="handleInput()"
+    (scroll)="handleScroll()"
+    (keydown)="handleKeydown()"
+    (blur)="handleBlur()"
+    (keydown.enter)="handleSubmit()"
+    />
+  <div class="fancy-input-backdrop">
+    <div
+      class="fancy-input-content fancy-input-highlights"
+      #fancyInputHighlightsEl
+      >
+      @for (section of highlightData.sections; track trackByIndex($index, section)) {
+        @if (!section.type) {
+          <span>{{ section.content }}</span>
+        }
+        @if (section.type === 'mark') {
+          <app-fancy-input-marker
+            [section]="section"
+            [activeEnvironment]="activeEnvironment"
+            (click)="fancyInputEl.focus()"
+          ></app-fancy-input-marker>
+        }
+      }
+    </div>
+  </div>
+</div>
